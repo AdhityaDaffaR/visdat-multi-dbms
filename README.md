@@ -4,6 +4,9 @@ Dashboard analitik e-commerce interaktif berbasis **Hybrid Multi-DBMS** yang men
 
 Data dari kedua DBMS diambil secara terpisah kemudian digabungkan pada tingkat aplikasi menggunakan **Pandas Data Federation**. Data hasil federasi selanjutnya dianalisis dan divisualisasikan melalui dashboard interaktif menggunakan **Streamlit** dan **Plotly**.
 
+**Live Application:**  
+https://adhityadaffa-ecommerce-analytics.streamlit.app/
+
 ---
 
 ## 📌 Deskripsi Proyek
@@ -15,7 +18,7 @@ Dataset e-commerce dipisahkan ke dalam dua DBMS berdasarkan fungsi datanya:
 - **Neon PostgreSQL (Cloud)** digunakan untuk menyimpan data transaksi.
 - **SQLite (Local Embedded)** digunakan untuk menyimpan data master produk.
 
-Integrasi tidak dilakukan melalui cross-database query secara langsung. Aplikasi mengambil data dari masing-masing DBMS secara independen, kemudian menggabungkannya menggunakan **Pandas** berdasarkan `product_id`.
+Integrasi tidak dilakukan melalui query lintas database secara langsung. Aplikasi mengambil data dari masing-masing DBMS secara independen, kemudian menggabungkannya menggunakan **Pandas** berdasarkan `product_id`.
 
 Data hasil federasi digunakan untuk menghasilkan Key Performance Indicator (KPI), visualisasi interaktif, dan insight bisnis pada dashboard.
 
@@ -39,7 +42,7 @@ Tujuan utama proyek ini adalah:
 
 ```text
              ┌──────────────────────────┐
-             │   Dataset CSV Original   │
+             │    Dataset CSV Asli      │
              │          Kaggle          │
              └────────────┬─────────────┘
                           │
@@ -120,7 +123,7 @@ Pemisahan tersebut menggambarkan skenario di mana data transaksi ditempatkan pad
 
 Alur pemrosesan data pada proyek ini adalah sebagai berikut:
 
-1. Dataset e-commerce original dibaca dari file CSV.
+1. Dataset e-commerce asli dibaca dari file CSV.
 2. `seed_data.py` mempersiapkan data yang akan disimpan pada masing-masing DBMS.
 3. Data transaksi dimasukkan ke tabel `transactions` pada **Neon PostgreSQL**.
 4. Data produk dimasukkan ke tabel `products` pada **SQLite**.
@@ -132,13 +135,15 @@ Alur pemrosesan data pada proyek ini adalah sebagai berikut:
 10. Pandas melakukan transformasi, filter, agregasi, dan analisis terhadap data hasil federasi.
 11. Hasil analisis divisualisasikan menggunakan **Plotly** pada aplikasi **Streamlit**.
 
-Secara sederhana, proses federasi data dilakukan dengan:
+Implementasi proses federasi data pada aplikasi:
 
 ```python
-federated_df = transactions_df.merge(
-    products_df,
+df_merged = pd.merge(
+    df_transactions,
+    df_products,
     on="product_id",
-    how="left"
+    how="inner",
+    validate="many_to_one",
 )
 ```
 
@@ -185,7 +190,7 @@ Dashboard menyediakan beberapa visualisasi:
 - **Discount vs Final Price**  
   Menganalisis hubungan antara persentase diskon dengan harga akhir transaksi.
 
-### Business Insights
+### Insight Bisnis
 
 Dashboard juga menghasilkan beberapa ringkasan analitik:
 
@@ -198,7 +203,7 @@ Dashboard juga menghasilkan beberapa ringkasan analitik:
 
 Dashboard menyediakan tabel preview untuk menampilkan dataset akhir setelah data dari **Neon PostgreSQL** dan **SQLite** digabungkan.
 
-Fitur ini juga membantu menunjukkan bahwa data yang digunakan dashboard merupakan hasil proses federasi dari dua DBMS yang berbeda.
+Fitur ini membantu menunjukkan bahwa data yang digunakan dashboard merupakan hasil proses federasi dari dua DBMS yang berbeda.
 
 ---
 
@@ -235,22 +240,24 @@ visdat-multi-dbms/
 │   ├── schema.sql
 │   └── seed_data.py
 │
-├── .env
 ├── .gitignore
 ├── app.py
 ├── README.md
 └── requirements.txt
+
+Local only:
+└── .env
 ```
 
 Keterangan file:
 
-- `app.py` — source code utama aplikasi Streamlit.
+- `app.py` — kode sumber utama aplikasi Streamlit.
 - `database/schema.sql` — definisi struktur tabel database.
-- `database/seed_data.py` — script untuk memasukkan dataset ke PostgreSQL dan SQLite.
+- `database/seed_data.py` — skrip untuk memasukkan dataset ke PostgreSQL dan SQLite.
 - `database/ecommerce.db` — database SQLite yang menyimpan master produk.
-- `data/ecommerce_dataset_updated.csv` — dataset original yang digunakan untuk proses inisialisasi database.
+- `data/ecommerce_dataset_updated.csv` — dataset asli yang digunakan untuk proses inisialisasi database.
 - `.streamlit/config.toml` — konfigurasi aplikasi dan tema Streamlit.
-- `requirements.txt` — daftar dependency Python.
+- `requirements.txt` — daftar dependensi Python.
 - `.gitignore` — menentukan file yang tidak boleh masuk repository.
 - `.env` — menyimpan kredensial database untuk lingkungan lokal dan **tidak disertakan dalam repository GitHub**.
 
@@ -286,7 +293,7 @@ Direkomendasikan menggunakan **Python 3.12** agar lingkungan lokal konsisten den
 Clone repository melalui Git:
 
 ```bash
-git clone <URL_REPOSITORY_GITHUB>
+git clone https://github.com/AdhityaDaffaR/visdat-multi-dbms.git
 ```
 
 Masuk ke direktori proyek:
@@ -299,7 +306,7 @@ cd visdat-multi-dbms
 
 ## 3. Membuat Virtual Environment
 
-Direkomendasikan menggunakan virtual environment agar dependency proyek tidak bercampur dengan package Python lainnya.
+Direkomendasikan menggunakan virtual environment agar dependensi proyek tidak bercampur dengan package Python lainnya.
 
 Windows:
 
@@ -326,7 +333,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Dependency utama yang akan diinstal meliputi:
+Dependensi utama yang akan diinstal meliputi:
 
 ```text
 streamlit
@@ -349,7 +356,7 @@ Buat file:
 .env
 ```
 
-pada root project, kemudian isi dengan format:
+pada root proyek, kemudian isi dengan format:
 
 ```env
 DATABASE_URL=postgresql://USERNAME:PASSWORD@HOST/DATABASE?sslmode=require
@@ -386,7 +393,7 @@ Sehingga untuk menjalankan dashboard, SQLite tidak memerlukan instalasi server d
 
 ## 7. Menjalankan Aplikasi
 
-Setelah dependency dan `DATABASE_URL` dikonfigurasi, jalankan:
+Setelah dependensi dan `DATABASE_URL` dikonfigurasi, jalankan:
 
 ```bash
 streamlit run app.py
@@ -415,6 +422,10 @@ Apabila aplikasi berhasil dijalankan, dashboard akan:
 
 Gunakan filter **Category**, **Payment Method**, dan **Date Range** untuk memastikan seluruh komponen dashboard dapat berubah secara interaktif.
 
+Untuk melakukan verifikasi tanpa konfigurasi lokal, aplikasi juga dapat diakses melalui deployment publik:
+
+https://adhityadaffa-ecommerce-analytics.streamlit.app/
+
 ---
 
 ## ♻️ Inisialisasi Ulang Database
@@ -427,7 +438,7 @@ Jika ingin mereplikasi proses pembuatan database dari dataset awal, pastikan `DA
 python database/seed_data.py
 ```
 
-Script akan:
+Skrip akan:
 
 1. Membaca `data/ecommerce_dataset_updated.csv`.
 2. Mempersiapkan master produk.
@@ -441,7 +452,7 @@ Dengan demikian, struktur dan isi database dapat direplikasi dari dataset sumber
 
 ## 🔐 Keamanan Kredensial
 
-Kredensial PostgreSQL tidak ditulis secara langsung di dalam source code.
+Kredensial PostgreSQL tidak ditulis secara langsung di dalam kode sumber.
 
 Untuk development lokal, kredensial disimpan menggunakan:
 
@@ -464,7 +475,7 @@ Pada deployment **Streamlit Community Cloud**, `DATABASE_URL` dikonfigurasi mela
 
 ## 📦 Deployment
 
-Aplikasi dirancang untuk di-deploy menggunakan **Streamlit Community Cloud**.
+Aplikasi telah di-deploy secara publik menggunakan **Streamlit Community Cloud**.
 
 Konfigurasi deployment:
 
@@ -475,23 +486,33 @@ Main file  : app.py
 Python     : 3.12
 ```
 
-Environment secret yang diperlukan:
+Environment secret yang diperlukan pada Streamlit Community Cloud:
 
 ```toml
 DATABASE_URL = "postgresql://USERNAME:PASSWORD@HOST/DATABASE?sslmode=require"
 ```
 
-> Nilai `DATABASE_URL` asli tidak disimpan pada repository GitHub.
+`DATABASE_URL` dikonfigurasi melalui **Streamlit Secrets** dan tidak disimpan di dalam repository GitHub.
+
+Pada saat aplikasi dijalankan di Streamlit Community Cloud:
+
+1. Data transaksi diambil dari **Neon PostgreSQL**.
+2. Data master produk dibaca dari **SQLite**.
+3. Kedua sumber data digabungkan menggunakan **Pandas** berdasarkan `product_id`.
+4. Data hasil federasi dianalisis dan divisualisasikan melalui **Streamlit + Plotly**.
 
 ---
 
 ## 🌐 Live Application
 
-Aplikasi akan tersedia secara publik setelah proses deployment selesai.
+Dashboard telah tersedia secara publik melalui **Streamlit Community Cloud**.
 
-**Live Demo:** `Coming Soon`
+**Live Demo:**  
+https://adhityadaffa-ecommerce-analytics.streamlit.app/
 
-Tautan pada bagian ini akan diperbarui setelah deployment Streamlit Community Cloud selesai.
+Aplikasi publik terhubung dengan **Neon PostgreSQL** untuk memperoleh data transaksi dan menggunakan **SQLite** sebagai embedded database untuk data master produk.
+
+Data dari kedua DBMS kemudian digabungkan pada application layer menggunakan **Pandas** sebelum dianalisis dan ditampilkan pada dashboard.
 
 ---
 
@@ -500,7 +521,7 @@ Tautan pada bagian ini akan diperbarui setelah deployment Streamlit Community Cl
 Dataset utama yang digunakan pada proyek ini adalah:
 
 **E-Commerce Dataset — Kaggle**  
-Publisher: **Steve Rogg**
+Penyedia dataset: **Steve Rogg**
 
 https://www.kaggle.com/datasets/steve1215rogg/e-commerce-dataset
 
@@ -539,16 +560,20 @@ https://github.com/sqlalchemy/sqlalchemy
 Repository menyediakan komponen yang dibutuhkan untuk memahami dan mereplikasi proyek:
 
 - Dataset sumber
-- Source code aplikasi
+- Kode sumber aplikasi
 - Skema database
-- Script seed database
+- Skrip seed database
 - Database SQLite
-- Dependency Python
+- Dependensi Python
 - Konfigurasi Streamlit
 - Dokumentasi instalasi
 - Dokumentasi arsitektur dan data pipeline
 
-Untuk menjalankan aplikasi dengan data transaksi cloud, diperlukan koneksi **Neon PostgreSQL** melalui `DATABASE_URL`.
+Untuk menjalankan proyek secara lokal dengan data transaksi cloud, diperlukan koneksi **Neon PostgreSQL** melalui `DATABASE_URL`.
+
+Untuk melakukan verifikasi langsung tanpa konfigurasi lingkungan lokal, dashboard dapat diakses melalui **Live Application** yang telah di-deploy pada Streamlit Community Cloud:
+
+https://adhityadaffa-ecommerce-analytics.streamlit.app/
 
 ---
 
@@ -567,7 +592,7 @@ Proyek Akademik — 2026
 
 Repository ini dibuat untuk keperluan akademik dan pembelajaran pada mata kuliah **Visualisasi Data dan Informasi**.
 
-Dataset tetap mengikuti ketentuan dan lisensi yang ditetapkan oleh publisher asli pada Kaggle.
+Dataset tetap mengikuti ketentuan dan lisensi yang ditetapkan oleh penyedia dataset asli pada Kaggle.
 
 Library dan proyek open-source pihak ketiga yang dijadikan referensi tetap mengikuti lisensi masing-masing.
 
